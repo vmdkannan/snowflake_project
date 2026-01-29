@@ -1,0 +1,118 @@
+alter user veeramanicadas SET RSA_PUBLIC_KEY= '------';
+
+
+SHOW WAREHOUSES;
+
+SELECT
+  "name",
+  "owner"
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
+
+
+DESC WAREHOUSE intl_wh;
+
+
+Create database SMOOTHIES;
+
+USE ROLE SYSADMIN;
+
+-- Set database and schema context
+USE DATABASE SMOOTHIES;
+USE SCHEMA PUBLIC;
+
+-- Create the table
+CREATE OR REPLACE TABLE FRUIT_OPTIONS (
+    FRUIT_ID   NUMBER,
+    FRUIT_NAME VARCHAR(25)
+);
+
+
+create file format smoothies.public.two_headerrow_pct_delim
+   type = CSV,
+   skip_header = 2,   
+   field_delimiter = '%',
+   trim_space = TRUE
+;
+
+SELECT $1, $2
+FROM @smoothies.public.my_uploaded_files/fruits_available_for_smoothies.txt
+(FILE_FORMAT => smoothies.public.two_headerrow_pct_delim);
+
+
+COPY INTO smoothies.public.fruit_options
+from (select $2 as FRUIT_ID, $1 AS FRUIT_NAME FROM @smoothies.public.my_uploaded_files/fruits_available_for_smoothies.txt)
+file_format = (format_name = smoothies.public.two_headerrow_pct_delim)
+on_error = abort_statement
+purge = true;
+
+
+create or replace table smoothies.public.ORDERS(
+ingredients varchar(200)
+);
+
+select * from smoothies.public.orders;
+
+truncate table smoothies.public.orders;
+
+
+alter table smoothies.public.orders add column name_on_order varchar(100);
+
+
+insert into smoothies.public.orders(ingredients, name_on_order) values ('Dragon Fruit Figs Honeydew Kiwi Jackfruit ','test');
+
+SELECT * from smoothies.public.orders;
+
+alter table smoothies.public.orders add column ORDER_FILLED boolean default false;
+
+update smoothies.public.orders set order_filled = true where name_on_order = 'test';
+
+alter table SMOOTHIES.PUBLIC.ORDERS 
+add column order_uid integer --adds the column
+default smoothies.public.order_seq.nextval  --sets the value of the column to sequence
+constraint order_uid unique enforced; --makes sure there is always a unique value in the column
+
+
+create or replace table smoothies.public.orders (
+       order_uid integer default smoothies.public.order_seq.nextval,
+       order_filled boolean default false,
+       name_on_order varchar(100),
+       ingredients varchar(200),
+       constraint order_uid unique (order_uid),
+       order_ts timestamp_ltz default current_timestamp()
+);
+
+ 
+
+ create function sum_mystery_bag_vars(var1 number, var2 number, var3 number)
+    returns number as 'Select var1+var2+var3';
+
+ select sum_mystery_bag_vars(10,12,45);
+
+
+create function NEUTRALIZE_WHINING(intext varchar(100))
+    returns varchar as 'Select INITCAP(intext)';
+
+select NEUTRALIZE_WHINING('dsqsdfEREfdfqsdRE xZERZE56');
+
+
+alter table fruit_options add column SEARCH_ON VARCHAR(25);
+
+update fruit_options set search_on = fruit_name;
+
+select * from fruit_options;
+
+update fruit_options set search_on = 'Apple' where fruit_name = 'Apples';
+update fruit_options set search_on = 'Blueberry' where fruit_name = 'Blueberries';
+update fruit_options set search_on = '' where fruit_name = 'Cantaloupe';
+update fruit_options set search_on = 'Dragonfruit' where fruit_name = 'Dragon Fruit';
+update fruit_options set search_on = 'Elderberry' where fruit_name = 'Elderberries';
+update fruit_options set search_on = 'Raspberry' where fruit_name = 'Raspberries';
+update fruit_options set search_on = 'Strawberry' where fruit_name = 'Strawberries';
+update fruit_options set search_on = 'Ugli fruit (jamaican tangelo)' where fruit_name = 'Ugli Fruit';
+update fruit_options set search_on = 'Ximenia (hog plum)' where fruit_name = 'Ximenia';
+update fruit_options set search_on = 'Yangmei (waxberry)' where fruit_name = 'Yerba Mate';
+
+
+select * from orders;
+
+ 
